@@ -1,19 +1,59 @@
 import { ModuleInfo } from '../types';
 
 export class ComponentDiagramGenerator {
+
+  constructor(private containerTitle: string) {}
+  
   generate(modules: ModuleInfo[], showNesting: boolean = false): string {
     const lines: string[] = [];
+    const containerTitleUpperCamelCase = this.sanitizeName(this.containerTitle.replace(/ /g, ""));
     
     lines.push('# NestJS Component Diagram');
     lines.push('');
     lines.push('direction: right');
     lines.push('');
+    lines.push('vars: {');
+    lines.push('  d2-config: {');
+    lines.push('    theme-id: 303');
+    lines.push('  }');
+    lines.push('}');
+    lines.push('');
     lines.push('classes: {');
     lines.push('  component: {');
     lines.push('    shape: rectangle');
-    lines.push('    style.fill: "#87CEEB"');
+    lines.push('    style.fill: "#63BEF2"');
     lines.push('    style.border-radius: 32');
     lines.push('  }');
+    lines.push('  container-expanded: {');
+    lines.push('    shape: rectangle');
+    lines.push('    style.border-radius: 32');
+    lines.push('    style.stroke-dash: 3');
+    lines.push('    label.near: bottom-left');
+    lines.push('    style.stroke: "#666666"');
+    lines.push('    style.font-color: "#333333"');
+    lines.push('  }');
+    lines.push('  container: {');
+    lines.push('    shape: rectangle');
+    lines.push('    style.fill: "#23A2D9"');
+    lines.push('    style.border-radius: 32');
+    lines.push('  }');
+    lines.push('  system: {');
+    lines.push('    shape: rectangle');
+    lines.push('    style.fill: "#1061B0"');
+    lines.push('    style.border-radius: 32');
+    lines.push('  }');
+    lines.push('  external-system: {');
+    lines.push('    shape: rectangle');
+    lines.push('    style.fill: "#8C8496"');
+    lines.push('    style.border-radius: 32');
+    lines.push('  }');
+    lines.push('}');
+    lines.push('');
+    lines.push(`${containerTitleUpperCamelCase}: |md`);
+    lines.push(`  ## ${this.containerTitle}`);
+    lines.push(`  **[Container: NestJS]**`);
+    lines.push(`| {`);
+    lines.push('  class: [container-expanded]');
     lines.push('}');
     lines.push('');
 
@@ -35,7 +75,7 @@ export class ComponentDiagramGenerator {
       }
       
       // Start module block
-      lines.push(`${moduleName}: |md`);
+      lines.push(`${containerTitleUpperCamelCase}.${moduleName}: |md`);
       lines.push(`  ${label}`);
       lines.push(`| {`);
       lines.push('  class: [component]');
@@ -84,7 +124,7 @@ export class ComponentDiagramGenerator {
         );
         
         if (exists) {
-          lines.push(`${moduleName} -> ${importedModuleName}: imports`);
+          lines.push(`${containerTitleUpperCamelCase}.${moduleName} -> ${containerTitleUpperCamelCase}.${importedModuleName}: imports`);
         }
       }
     }

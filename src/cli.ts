@@ -11,6 +11,7 @@ import {
   promptForInteractiveMode,
   promptForDefaultTechnology,
   enrichModuleWithMetadata,
+  promptForContainerTitle,
 } from './interactive';
 
 const program = new Command();
@@ -49,6 +50,7 @@ program
       // Check for interactive mode
       let isInteractive = options.interactive;
       let defaultTechnology = '';
+      let containerTitle = await promptForContainerTitle();
 
       if (!isInteractive && !options.classOnly) {
         isInteractive = await promptForInteractiveMode();
@@ -77,7 +79,7 @@ program
           modules = enrichedModules;
         }
         
-        const componentGen = new ComponentDiagramGenerator();
+        const componentGen = new ComponentDiagramGenerator(containerTitle);
         const componentD2 = componentGen.generate(modules);
         
         const componentPath = `${outputDir}/component-diagram.d2`;

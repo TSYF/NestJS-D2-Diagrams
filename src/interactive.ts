@@ -1,6 +1,17 @@
 import prompts from 'prompts';
 import { ModuleInfo } from './types';
 
+export async function promptForContainerTitle(): Promise<string> {
+  const response = await prompts({
+    type: 'text',
+    name: 'container',
+    message: 'Please name the container that represents this project',
+    initial: false,
+  });
+
+  return response.container;
+}
+
 export async function promptForInteractiveMode(): Promise<boolean> {
   const response = await prompts({
     type: 'confirm',

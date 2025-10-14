@@ -1,6 +1,6 @@
 {
   "name": "nestjs-d2-diagrams",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Generate D2 component and class diagrams from NestJS projects",
   "main": "dist/cli.js",
   "bin": {
