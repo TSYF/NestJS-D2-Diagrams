@@ -5,6 +5,10 @@ export interface ModuleInfo {
   providers: string[];
   controllers: string[];
   exports: string[];
+  guards?: string[];
+  interceptors?: string[];
+  pipes?: string[];
+  filters?: string[];
   technology?: string;
   description?: string;
 }
@@ -14,6 +18,24 @@ export interface ClassInfo {
   filePath: string;
   dependencies: DependencyInfo[];
   isInjectable: boolean;
+  classType?: 'controller' | 'service' | 'guard' | 'interceptor' | 'pipe' | 'filter' | 'middleware' | 'other';
+  moduleContext?: string; // Which module this class belongs to
+  properties: PropertyInfo[];
+  methods: MethodInfo[];
+}
+
+export interface PropertyInfo {
+  name: string;
+  type: string;
+  isPrivate: boolean;
+  isReadonly: boolean;
+}
+
+export interface MethodInfo {
+  name: string;
+  returnType: string;
+  isPrivate: boolean;
+  parameters: string[];
 }
 
 export interface DependencyInfo {

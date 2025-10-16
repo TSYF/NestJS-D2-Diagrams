@@ -12,14 +12,17 @@ import {
   promptForDefaultTechnology,
   enrichModuleWithMetadata,
   promptForContainerTitle,
+  parseExistingD2File,
+  promptForClassDiagramOptions,
 } from './interactive';
+import { ModuleInfo } from './types';
 
 const program = new Command();
 
 program
   .name('nest-d2')
   .description('Generate D2 diagrams from NestJS projects')
-  .version('1.0.0');
+  .version('1.2.0');
 
 program
   .command('generate')
@@ -50,57 +53,77 @@ program
       // Check for interactive mode
       let isInteractive = options.interactive;
       let defaultTechnology = '';
-      let containerTitle = await promptForContainerTitle();
+      let containerTitle = '';
+      let modules: ModuleInfo[] = [];
 
-      if (!isInteractive && !options.classOnly) {
-        isInteractive = await promptForInteractiveMode();
-      }
-
-      if (isInteractive) {
-        defaultTechnology = await promptForDefaultTechnology();
-      }
+      // Analyze modules first (needed for both diagrams)
+      console.log('\nAnalyzing modules...');
+      const moduleAnalyzer = new ModuleAnalyzer(projectPath);
+      modules = moduleAnalyzer.analyze();
+      console.log(`Found ${modules.length} modules`);
 
       // Generate component diagram
       if (!options.classOnly) {
-        console.log('\nAnalyzing modules...');
-        const moduleAnalyzer = new ModuleAnalyzer(projectPath);
-        let modules = moduleAnalyzer.analyze();
-        
-        console.log(`Found ${modules.length} modules`);
+        containerTitle = await promptForContainerTitle();
 
-        // Enrich modules with metadata if interactive
+        if (!isInteractive) {
+          isInteractive = await promptForInteractiveMode();
+        }
+
         if (isInteractive) {
+          defaultTechnology = await promptForDefaultTechnology();
+          
+          // Check for existing component diagram and parse metadata
+          const existingDiagramPath = `${outputDir}/component-diagram.d2`;
+          const existingMetadataMap = parseExistingD2File(existingDiagramPath, containerTitle);
+          
+          if (existingMetadataMap.size > 0) {
+            console.log('\n✓ Found existing component diagram with metadata');
+          }
+          
           console.log('\n=== Adding metadata to modules ===');
           const enrichedModules = [];
           for (const module of modules) {
-            const enriched = await enrichModuleWithMetadata(module, defaultTechnology);
+            const existingMetadata = existingMetadataMap.get(module.name);
+            const enriched = await enrichModuleWithMetadata(
+              module, 
+              defaultTechnology,
+              existingMetadata
+            );
             enrichedModules.push(enriched);
           }
           modules = enrichedModules;
         }
         
         const componentGen = new ComponentDiagramGenerator(containerTitle);
-        const componentD2 = componentGen.generate(modules);
+        // Don't show nesting in interactive mode (only show tech + desc)
+        const componentD2 = componentGen.generate(modules, !isInteractive);
         
         const componentPath = `${outputDir}/component-diagram.d2`;
         writeFileSync(componentPath, componentD2);
         console.log(`\n✓ Component diagram saved to: ${componentPath}`);
       }
 
-      // Generate class diagram
+      // Generate class diagrams
       if (!options.componentOnly) {
         console.log('\nAnalyzing classes...');
+        
+        // Prompt for class diagram options
+        const classOptions = await promptForClassDiagramOptions();
+        
         const classAnalyzer = new ClassAnalyzer(projectPath);
-        const classes = classAnalyzer.analyze();
+        const classes = classAnalyzer.analyze(modules);
         
         console.log(`Found ${classes.length} classes`);
         
-        const classGen = new ClassDiagramGenerator();
-        const classD2 = classGen.generate(classes);
+        const classGen = new ClassDiagramGenerator(
+          classOptions.includeAttributes,
+          classOptions.includeMethods
+        );
+        classGen.generateAll(classes, modules, outputDir);
         
-        const classPath = `${outputDir}/class-diagram.d2`;
-        writeFileSync(classPath, classD2);
-        console.log(`✓ Class diagram saved to: ${classPath}`);
+        console.log(`✓ Global class diagram saved to: ${outputDir}/class-diagram-global.d2`);
+        console.log(`✓ Component class diagrams saved to: ${outputDir}/class-diagrams/`);
       }
 
       console.log('\nDone! 🎉');

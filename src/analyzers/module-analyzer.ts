@@ -49,6 +49,10 @@ export class ModuleAnalyzer {
         providers: this.extractArrayPropertyValues(configObject, 'providers'),
         controllers: this.extractArrayPropertyValues(configObject, 'controllers'),
         exports: this.extractArrayPropertyValues(configObject, 'exports'),
+        guards: this.extractArrayPropertyValues(configObject, 'guards'),
+        interceptors: this.extractArrayPropertyValues(configObject, 'interceptors'),
+        pipes: this.extractArrayPropertyValues(configObject, 'pipes'),
+        filters: this.extractArrayPropertyValues(configObject, 'filters'),
       };
     }
 
